@@ -1,0 +1,19 @@
+services:
+  rsyncwebui:
+    build: .
+    image: rsyncwebui:latest
+    container_name: rsyncwebui
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      TZ: Europe/Berlin
+      PORT: 8080
+      BROWSE_ROOTS: /mnt,/data,/config
+      # Optional access protection (basic auth). Leave unset for no login.
+      # AUTH_USER: admin
+      # AUTH_PASS: change-me
+    volumes:
+      - ./config:/config
+      # On Unraid use these instead: /mnt/user:/mnt/user and /mnt/disks:/mnt/disks
+      - /mnt:/mnt

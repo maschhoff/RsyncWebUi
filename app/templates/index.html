@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ app_name }}</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/css/style.css?v={{ version }}">
+<script>
+  // Applied before first paint so the page never flashes light.
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem("theme"); } catch (e) {}
+    var dark = saved ? saved === "dark"
+                     : !window.matchMedia("(prefers-color-scheme: light)").matches;
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+  })();
+</script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="lamp" id="healthLamp" title="Connection"></span>
+    <span class="wordmark">Rsync<span class="dot">Web</span>UI</span>
+  </div>
+  <div class="topbar-meta" id="topbarMeta"></div>
+  <div class="topbar-actions">
+    <button class="icon-btn theme-btn" id="btnTheme" title="Switch between light and dark"
+            aria-label="Switch theme"></button>
+    <button class="btn ghost" id="btnHistory">History</button>
+    <button class="btn primary" id="btnNew">New task</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="taskList" class="tasks"></div>
+
+  <div id="emptyState" class="empty" hidden>
+    <div class="empty-rail"></div>
+    <h2>No tasks yet</h2>
+    <p>A task describes one transfer: where from, where to, which rsync options to use
+       and — if you want — on what schedule to repeat it.</p>
+    <button class="btn primary" id="btnNewEmpty">Create your first task</button>
+  </div>
+</main>
+
+<footer class="footer">
+  <span>{{ app_name }} {{ version }}</span>
+  <span id="footRsync"></span>
+</footer>
+
+<!-- ------------------------------------------------------------ task editor -->
+<div class="modal" id="editorModal" hidden>
+  <div class="modal-card wide">
+    <header class="modal-head">
+      <h2 id="editorTitle">New task</h2>
+      <button class="icon-btn" data-close="editorModal" aria-label="Close">&times;</button>
+    </header>
+
+    <div class="modal-body">
+      <section class="field-grid">
+        <label class="field">
+          <span class="lbl">Name</span>
+          <input id="fName" type="text" placeholder="e.g. Photos to backup share">
+        </label>
+        <label class="field">
+          <span class="lbl">Note</span>
+          <input id="fDescription" type="text" placeholder="optional">
+        </label>
+      </section>
+
+      <section class="transfer-editor">
+        <div class="node source">
+          <div class="node-head">
+            <span class="lbl">Sources</span>
+            <button class="btn tiny" id="btnAddSource">Add source</button>
+          </div>
+          <div id="sourceList" class="source-list"></div>
+          <label class="check inline">
+            <input type="checkbox" id="fSourceContents" checked>
+            <span>Transfer the <em>contents</em> only (trailing slash)</span>
+          </label>
+          <p class="warn-note" id="multiWarn" hidden></p>
+        </div>
+        <div class="rail static"><span class="rail-arrow">▸</span></div>
+        <div class="node target">
+          <span class="lbl">Destination</span>
+          <div class="path-input">
+            <input id="fDestination" type="text" spellcheck="false" placeholder="/mnt/disks/backup/photos">
+            <button class="btn tiny" data-browse="fDestination">Browse</button>
+          </div>
+          <p class="hint">For remote destinations use <code>user@host:/path</code> and enable SSH below.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <span class="lbl">Schedule</span>
+          <label class="switch">
+            <input type="checkbox" id="fScheduleOn">
+            <span class="slider"></span>
+            <span class="switch-label">Repeat automatically</span>
+          </label>
+        </div>
+        <div class="panel-body" id="scheduleBody">
+          <div class="preset-row" id="cronPresets"></div>
+          <div class="cron-row">
+            <input id="fSchedule" type="text" class="mono" placeholder="0 3 * * *" spellcheck="false">
+            <span class="cron-legend">minute&nbsp;· hour&nbsp;· day&nbsp;· month&nbsp;· weekday</span>
+          </div>
+          <p class="cron-status" id="cronStatus"></p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><span class="lbl">rsync options</span></div>
+        <div class="panel-body">
+          <div class="opt-tabs" id="optTabs"></div>
+          <div id="optPanels"></div>
+        </div>
+      </section>
+
+      <section class="preview">
+        <span class="lbl">Command</span>
+        <code id="cmdPreview" class="cmd">rsync …</code>
+      </section>
+    </div>
+
+    <footer class="modal-foot">
+      <span class="err" id="editorError"></span>
+      <button class="btn ghost" data-close="editorModal">Cancel</button>
+      <button class="btn primary" id="btnSave">Save task</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ------------------------------------------------------------ file browser -->
+<div class="modal" id="browseModal" hidden>
+  <div class="modal-card">
+    <header class="modal-head">
+      <h2 id="browseTitle">Choose a directory</h2>
+      <button class="icon-btn" data-close="browseModal" aria-label="Close">&times;</button>
+    </header>
+    <div class="crumbs" id="crumbs"></div>
+    <div class="browser" id="browserList"></div>
+    <footer class="modal-foot">
+      <code class="cmd grow" id="browseCurrent">—</code>
+      <button class="btn ghost" data-close="browseModal">Cancel</button>
+      <button class="btn primary" id="btnPick">Use this path</button>
+    </footer>
+  </div>
+</div>
+
+<!-- -------------------------------------------------------------------- logs -->
+<div class="drawer" id="logDrawer" hidden>
+  <header class="drawer-head">
+    <div class="drawer-title">
+      <span class="lbl" id="logMeta">Run</span>
+      <h2 id="logTitle">—</h2>
+    </div>
+    <div class="drawer-actions">
+      <button class="btn danger small" id="btnCancelRun" hidden>Cancel run</button>
+      <button class="btn ghost small" id="btnCopyLog">Copy log</button>
+      <button class="icon-btn" id="btnCloseLog" aria-label="Close">&times;</button>
+    </div>
+  </header>
+  <div class="progress-strip" id="logProgress" hidden><span></span></div>
+  <div class="live-line" id="liveLine" hidden></div>
+  <pre class="log" id="logBody"></pre>
+</div>
+
+<!-- ----------------------------------------------------------------- history -->
+<div class="modal" id="historyModal" hidden>
+  <div class="modal-card">
+    <header class="modal-head">
+      <h2>History</h2>
+      <button class="icon-btn" data-close="historyModal" aria-label="Close">&times;</button>
+    </header>
+    <div class="history" id="historyList"></div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script src="/static/js/app.js?v={{ version }}"></script>
+</body>
+</html>

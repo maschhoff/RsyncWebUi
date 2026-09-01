@@ -7,8 +7,9 @@ schedule. Every run streams a live log with a progress bar and is kept in a hist
 No external CDN, no web fonts, no JavaScript framework — the container serves everything it
 needs.
 
-![screenshot]([https://raw.githubusercontent.com/maschhoff/easynotes/refs/heads/main/easynotes%202026-09-01%20113824.png](https://raw.githubusercontent.com/maschhoff/RsyncWebUi/refs/heads/main/Bildschirmfoto%20vom%202026-09-01%2009-46-24.png))
-![screenshot2]([[https://raw.githubusercontent.com/maschhoff/easynotes/refs/heads/main/easynotes%202026-09-01%20113824.png](https://raw.githubusercontent.com/maschhoff/RsyncWebUi/refs/heads/main/Bildschirmfoto%20vom%202026-09-01%2009-46-24.png](https://raw.githubusercontent.com/maschhoff/RsyncWebUi/refs/heads/main/Bildschirmfoto%20vom%202026-09-01%2009-46-50.png))
+![Screenshot 2](https://raw.githubusercontent.com/maschhoff/RsyncWebUi/refs/heads/main/Bildschirmfoto%20vom%202026-09-01%2009-46-24.png)
+ 
+![Screenshot 3](https://raw.githubusercontent.com/maschhoff/RsyncWebUi/refs/heads/main/Bildschirmfoto%20vom%202026-09-01%2009-46-50.png)
 
 ```
 ┌──────────────────────────────────────────────────────────────┐

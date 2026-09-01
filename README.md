@@ -43,7 +43,7 @@ needs.
 ### Docker Compose
 
 ```bash
-git clone https://github.com/YOUR-NAME/RsyncWebUI.git
+git clone https://github.com/maschhoff/RsyncWebUi
 cd RsyncWebUI
 docker compose up -d --build
 ```
@@ -52,12 +52,9 @@ Open `http://localhost:8080`.
 
 ### Unraid
 
-**1. Build the image** on the server:
+**1. Community Apps
+RsyncWebUi can be installed with Community Apps
 
-```bash
-cd /mnt/user/appdata/build/RsyncWebUI
-docker build -t rsyncwebui:latest .
-```
 
 **2. Install the template:**
 

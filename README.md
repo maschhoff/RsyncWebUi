@@ -11,16 +11,6 @@ needs.
  
 ![Screenshot 3](https://raw.githubusercontent.com/maschhoff/RsyncWebUi/refs/heads/main/Bildschirmfoto%20vom%202026-09-01%2009-46-50.png)
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│ Rsync·WebUI            Europe/Berlin  rsync ready   ☀  + New │
-├──────────────────────────────────────────────────────────────┤
-│ ▍Photos to backup                                            │
-│   /mnt/user/photos/     ▸▸   /mnt/disks/usb/photos           │
-│   Last run: 03:00 · succeeded   Next run: tomorrow 03:00     │
-│   0 3 * * *   --delete                    Run  Dry run  Log  │
-└──────────────────────────────────────────────────────────────┘
-```
 
 ---
 

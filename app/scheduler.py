@@ -13,6 +13,7 @@ from .rsync_runner import manager
 
 log = logging.getLogger("rsyncweb.scheduler")
 TZ = os.environ.get("TZ", "Europe/Berlin")
+PAUSE_SETTING = "scheduler_paused"
 
 scheduler = BackgroundScheduler(timezone=TZ, job_defaults={"coalesce": True, "max_instances": 1})
 
@@ -77,9 +78,25 @@ def next_run_times() -> dict[int, str]:
     return result
 
 
+def is_paused() -> bool:
+    return db.get_setting(PAUSE_SETTING, "0") == "1"
+
+
+def pause() -> None:
+    scheduler.pause()
+    db.set_setting(PAUSE_SETTING, "1")
+
+
+def resume() -> None:
+    scheduler.resume()
+    db.set_setting(PAUSE_SETTING, "0")
+
+
 def start() -> None:
     if not scheduler.running:
         scheduler.start()
     for task in db.list_tasks():
         sync_task(task)
-    log.info("Scheduler started (%s active schedules)", len(scheduler.get_jobs()))
+    if is_paused():
+        scheduler.pause()
+    log.info("Scheduler started (%s active schedules, paused=%s)", len(scheduler.get_jobs()), is_paused())

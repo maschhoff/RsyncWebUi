@@ -64,6 +64,11 @@ CREATE TABLE IF NOT EXISTS runs (
 );
 
 CREATE INDEX IF NOT EXISTS idx_runs_task ON runs(task_id, id DESC);
+
+CREATE TABLE IF NOT EXISTS settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
 """
 
 
@@ -78,6 +83,23 @@ def init_db() -> None:
 
     with connect() as conn:
         conn.executescript(SCHEMA)
+
+
+# ------------------------------------------------------------------------ settings
+
+def get_setting(key: str, default: str | None = None) -> str | None:
+    with connect() as conn:
+        row = conn.execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
+        return row["value"] if row else default
+
+
+def set_setting(key: str, value: str) -> None:
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO settings (key, value) VALUES (?, ?) "
+            "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            (key, value),
+        )
 
 
 # --------------------------------------------------------------------------- tasks

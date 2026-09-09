@@ -15,6 +15,7 @@ const state = {
   browsePath: "",
   stream: null,
   currentRun: null,
+  schedulerPaused: false,
 };
 
 /* ------------------------------------------------------------- option model */
@@ -255,6 +256,7 @@ function renderTasks() {
              <button class="btn ghost small" data-act="dry">Dry run</button>
              <button class="btn ghost small" data-act="log" ${last ? "" : "disabled"}>Log</button>
              <button class="btn ghost small" data-act="edit">Edit</button>
+             <button class="btn ghost small" data-act="duplicate">Duplicate</button>
              <button class="btn ghost small" data-act="delete">Delete</button>`}
       </div>
       ${running ? `<div class="task-progress"><span style="width:${task.progress || 0}%"></span></div>` : ""}
@@ -305,6 +307,16 @@ $("#taskList").addEventListener("click", async (ev) => {
   }
 
   if (act === "edit") openEditor(task);
+
+  if (act === "duplicate") {
+    btn.disabled = true;
+    try {
+      await api(`/api/tasks/${id}/duplicate`, { method: "POST" });
+      toast("Task duplicated.", "ok");
+      await loadTasks();
+    } catch (err) { toast(err.message, "error"); }
+    btn.disabled = false;
+  }
 
   if (act === "delete") {
     if (!confirm(`Delete task "${task.name}"? Transferred data is left untouched.`)) return;
@@ -966,6 +978,15 @@ function wireStaticHandlers() {
   });
 }
 
+function renderSchedulerButton() {
+  const btn = $("#btnScheduler");
+  btn.classList.toggle("paused", state.schedulerPaused);
+  $("#schedulerLabel").textContent = state.schedulerPaused ? "Scheduler paused" : "Scheduler running";
+  btn.title = state.schedulerPaused
+    ? "Scheduled runs are paused. Click to resume."
+    : "Pause all scheduled runs.";
+}
+
 async function loadStatus() {
   try {
     const s = await api("/api/status");
@@ -975,12 +996,27 @@ async function loadStatus() {
     $("#footRsync").textContent = s.rsync_available
       ? `Allowed roots: ${s.browse_roots.join(", ")}`
       : "rsync is not available inside this container.";
+    state.schedulerPaused = Boolean(s.scheduler_paused);
+    renderSchedulerButton();
   } catch (_) { /* never mind */ }
 }
+
+$("#btnScheduler").addEventListener("click", async () => {
+  const btn = $("#btnScheduler");
+  btn.disabled = true;
+  try {
+    const path = state.schedulerPaused ? "/api/scheduler/resume" : "/api/scheduler/pause";
+    const res = await api(path, { method: "POST" });
+    state.schedulerPaused = Boolean(res.paused);
+    renderSchedulerButton();
+    toast(state.schedulerPaused ? "Scheduler paused." : "Scheduler resumed.", "ok");
+  } catch (err) { toast(err.message, "error"); }
+  btn.disabled = false;
+});
 
 setTheme(currentTheme());
 buildOptionUI();
 wireStaticHandlers();
 loadStatus();
 loadTasks();
-setInterval(() => { if ($("#editorModal").hidden) loadTasks(); }, 8000);
+setInterval(() => { if ($("#editorModal").hidden) { loadTasks(); loadStatus(); } }, 8000);

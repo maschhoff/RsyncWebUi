@@ -179,6 +179,21 @@ code, .mono, pre { font-family: var(--mono); }
 }
 .topbar-actions { display: flex; gap: 8px; }
 
+.dot-ico {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  margin-right: 7px;
+  background: var(--teal);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal) 20%, transparent);
+  vertical-align: middle;
+}
+#btnScheduler.paused .dot-ico {
+  background: var(--amber);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber) 22%, transparent);
+}
+#btnScheduler.paused { border-color: color-mix(in srgb, var(--amber) 45%, transparent); color: var(--amber); }
+
 /* ------------------------------------------------------------------ buttons */
 
 .btn {

@@ -254,6 +254,20 @@ def api_preview():
         return jsonify(error=str(exc)), 400
 
 
+@app.post("/api/scheduler/pause")
+@requires_auth
+def api_scheduler_pause():
+    scheduler.pause()
+    return jsonify(paused=True)
+
+
+@app.post("/api/scheduler/resume")
+@requires_auth
+def api_scheduler_resume():
+    scheduler.resume()
+    return jsonify(paused=False)
+
+
 @app.post("/api/cron/validate")
 @requires_auth
 def api_validate_cron():
@@ -341,6 +355,7 @@ def api_status():
         timezone=os.environ.get("TZ", "Europe/Berlin"),
         browse_roots=BROWSE_ROOTS,
         running=manager.running_ids(),
+        scheduler_paused=scheduler.is_paused(),
         server_time=time.strftime("%Y-%m-%dT%H:%M:%S"),
     )
 

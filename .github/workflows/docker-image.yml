@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Docker Image CI PRPDF
 
 on:
   push:
@@ -15,4 +15,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag rsyncwebui:latest
+      run: docker build . --file Dockerfile --tag knex666/rsyncwebui
+    - name: login and push
+      run: |
+            docker login -u knex666 -p ${{secrets.DOCKER_HUB_TOKEN}} 
+            docker push knex666/rsyncwebui

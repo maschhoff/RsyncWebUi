@@ -232,6 +232,9 @@ code, .mono, pre { font-family: var(--mono); }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
 
 .icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   color: var(--muted);
@@ -240,6 +243,7 @@ code, .mono, pre { font-family: var(--mono); }
   padding: 2px 8px;
   cursor: pointer;
   border-radius: var(--radius-sm);
+  text-decoration: none;
 }
 .icon-btn:hover { color: var(--text); background: var(--panel-2); }
 

@@ -83,6 +83,8 @@ The interface is then available at `http://<unraid-ip>:8080`.
 | `/mnt/user` | Unraid shares | `rw` |
 | `/mnt/disks` | Unassigned Devices, for external backup drives | `rw,slave` |
 | `/mnt/remotes` | Mounted SMB/NFS shares | `rw,slave` |
+| `/mnt/cache` | Mounted Cache | `rw` |
+
 
 `rw,slave` matters: without it a drive plugged in later stays invisible inside the container
 even though Unraid has already mounted it.

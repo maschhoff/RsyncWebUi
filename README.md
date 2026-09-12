@@ -29,6 +29,8 @@ needs.
 - **SSH destinations** (`user@host:/path`) with a custom port and key
 - **Light and dark mode**, following the system setting on first visit
 - Optional username and password protection
+- **MCP server** — every action above is also available to an AI assistant as a tool
+  (create/run/duplicate tasks, read logs, pause the scheduler, …)
 
 ---
 
@@ -185,6 +187,7 @@ RsyncWebUI/
 │   ├── db.py             SQLite access for tasks and runs
 │   ├── rsync_runner.py   Command building, process handling, live log
 │   ├── scheduler.py      Cron schedules via APScheduler
+│   ├── mcp_server.py     MCP server exposing every action as an AI tool
 │   ├── templates/        HTML
 │   └── static/           CSS and JavaScript, no external dependencies
 ├── unraid/rsyncwebui.xml Unraid template
@@ -236,6 +239,60 @@ curl -X POST localhost:8080/api/tasks \
                     "source_contents": false, "excludes": "*.tmp"}
       }'
 ```
+
+---
+
+## MCP server (AI integration)
+
+`app/mcp_server.py` exposes the same actions as the REST API above as [MCP](https://modelcontextprotocol.io)
+tools, so an AI assistant (Claude Desktop, Claude Code, …) can create tasks, start or cancel
+runs, read logs, browse directories, and pause or resume the scheduler on your behalf.
+
+It is a thin client: it talks to the already-running RsyncWebUI over HTTP, the same way your
+browser does, and needs no direct database or filesystem access of its own.
+
+| Tool | Purpose |
+|---|---|
+| `list_tasks`, `get_task` | inspect tasks |
+| `create_task`, `update_task`, `delete_task`, `duplicate_task` | manage tasks |
+| `run_task`, `cancel_run` | start (optionally dry) or stop a transfer |
+| `get_run`, `list_runs` | run history and logs |
+| `browse` | list a directory under `BROWSE_ROOTS` |
+| `preview_command`, `validate_cron` | check options/schedule before saving |
+| `pause_scheduler`, `resume_scheduler` | hold or release all cron runs |
+| `get_status` | version, timezone, allowed roots, running tasks |
+
+### Claude Desktop / Claude Code
+
+Add a server entry that runs the tool inside the existing container over stdio:
+
+```json
+{
+  "mcpServers": {
+    "rsyncwebui": {
+      "command": "docker",
+      "args": ["exec", "-i", "rsyncwebui", "python", "-m", "app.mcp_server"]
+    }
+  }
+}
+```
+
+`RSYNCWEBUI_URL` defaults to `http://127.0.0.1:8080`, which is correct from inside the container.
+If the web UI has `AUTH_USER`/`AUTH_PASS` set, the MCP server picks up the same two variables.
+
+### Standalone
+
+```bash
+pip install -r requirements.txt
+RSYNCWEBUI_URL=http://localhost:8080 python -m app.mcp_server
+```
+
+### Exposing it over the network
+
+Set `MCP_TRANSPORT=streamable-http` (or `sse`) and `MCP_HOST`/`MCP_PORT` to run it as an HTTP
+service instead of stdio — useful for remote MCP clients. It has no authentication of its own
+beyond the RsyncWebUI credentials it uses upstream, so put it behind a reverse proxy or on a
+trusted network only, the same as the web UI itself.
 
 ---
 
